@@ -8,4 +8,5 @@ The cluster number is not directly given, but controlled by the temperature `T`.
    
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry).    
 For details about the method, see .   
-For definitions of the parameters, see the leading comments in `crystalcluster.m`.
+For definitions of the parameters, see the leading comments in `crystalcluster.m`.   
+`iris.mat` is an example dataset (The iris flower dataset).
