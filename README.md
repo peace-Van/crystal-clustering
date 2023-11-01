@@ -7,6 +7,6 @@ Cluster on dataset `X` with weights `W` at temperature `T`, using the algorithm 
 The cluster number is not directly given, but controlled by the temperature `T`. Higher temperature gives more clusters.   
    
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry).    
-For details about the method, see .   
+For details about the method, see [A novel clustering method - Crystal clustering](https://peace-van.github.io/climate/2023/11/01/crystalcluster.html).   
 For definitions of the parameters, see the leading comments in `crystalcluster.m`.   
-`iris.mat` is an example dataset (The iris flower dataset).
+`iris.mat` is an example dataset (the Iris flower dataset).
