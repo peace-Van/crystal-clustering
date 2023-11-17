@@ -1,7 +1,7 @@
 # Crystal Clustering
 A clustering method inspired by precipitation-solubility equilibrium
 
->[idx, mst, G] = crystalcluster(X, W, T, mode, loops)   
+> [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)   
    
 Cluster on dataset `X` with weights `W` at 'temperature' `T`, using the algorithm specified by `mode`, running a maximum number of `loops`.   
 The cluster number is not directly given, but controlled by the relaxation parameter `T`. `T` needs to be positive and higher `T` gives more clusters.   
