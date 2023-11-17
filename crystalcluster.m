@@ -1,4 +1,4 @@
-function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops)
+function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
 % CRYSTALCLUSTER  Crystal(aka thermodynamics) clustering.
 %   Cluster on dataset X with weights W at temperature T, 
 %   using the algorithm specified by 'mode'
