@@ -1,10 +1,10 @@
-function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
+function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops)
 % CRYSTALCLUSTER  Crystal(aka thermodynamics) clustering.
 %   Cluster on dataset X with weights W at temperature T, 
 %   using the algorithm specified by 'mode'
 %   running a maximum number of 'loops'.
 
-%   [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
+%   [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
 %   X - A m-by-n numeric matrix where each row is an observation and each 
 %       column is a variable.
 %   W - A m-by-1 numeric vector where each entry specifies the weight of
@@ -28,9 +28,11 @@ function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
 %       'backtrack' is the go-to algorithm.
 %   loops - The maximum number of iterations. If not given when running the
 %       'backtrack' or 'random' algorithm, the program may not terminate.
+%   verbose - Whether to print each action.
 %   idx - Cluster indices returned as a m-by-1 numeric column vector. 
 %   mst - The resulting spanning forest after system evolution.
 %   G - The lowest Gibbs energy reached.
+%   theoT - The theoretical temperature.
 
     sz = size(X, 1);
     try
@@ -45,6 +47,7 @@ function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
     switch mode
         case 'surrogate'
             mst = my_minspantree(X, W);
+            theoT = -sum(mst.Edges.Weight) / log(sz);
             
             opt = optimoptions('surrogateopt', 'Display', 'iter', 'MinSampleDistance', sqrt(2/(sz-1)), 'UseParallel', true, 'PlotFcn', [], 'OutputFcn', @stopFcn);%'MaxFunctionEvaluations', 20*(sz-1));
             [sol, G] = surrogateopt(@(m) objective_func(m, mst, W, T), zeros(sz-1, 1), ones(sz-1, 1), 1:sz-1, opt);
@@ -57,6 +60,7 @@ function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
 
             mst = my_minspantree(X, W);
             G = sum(mst.Edges.Weight);
+            theoT = -G / log(sz);
             delta_H = -adjacency(mst, 'weighted');
             
             delta_S = adjacency(mst);       % initialize
@@ -89,8 +93,14 @@ function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
                 if bt && ~t
                     % if the bond does not exist, form it
                     mst = addedge(mst, row, col, -delta_H(row, col));
+                    if verbose
+                        fprintf('form %d - %d\n', col, row)
+                    end
                 else
                     mst = rmedge(mst, t);
+                    if verbose
+                        fprintf('break %d - %d\n', col, row)
+                    end
                 end
                 
                 if bt
@@ -132,6 +142,7 @@ function [idx, mst, G] = crystalcluster(X, W, T, mode, loops)
             
         case 'random'
             mst = graph(speye(sz), 'omitselfloops');
+            theoT = [];    % without calculating the MST this algorithm cannot give theoT
             G = -T * my_entropy(mst, W);
             for i = 1:loops
                 p = randperm(sz, 2);
