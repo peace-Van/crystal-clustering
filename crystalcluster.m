@@ -47,7 +47,7 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
     switch mode
         case 'surrogate'
             mst = my_minspantree(X, W);
-            theoT = -sum(mst.Edges.Weight) / log(sz);
+            theoT = -sum(mst.Edges.Weight) / log(sum(W));
             
             opt = optimoptions('surrogateopt', 'Display', 'iter', 'MinSampleDistance', sqrt(2/(sz-1)), 'UseParallel', true, 'PlotFcn', [], 'OutputFcn', @stopFcn);%'MaxFunctionEvaluations', 20*(sz-1));
             [sol, G] = surrogateopt(@(m) objective_func(m, mst, W, T), zeros(sz-1, 1), ones(sz-1, 1), 1:sz-1, opt);
@@ -60,7 +60,7 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
 
             mst = my_minspantree(X, W);
             G = sum(mst.Edges.Weight);
-            theoT = -G / log(sz);
+            theoT = -G / log(sum(W));
             delta_H = -adjacency(mst, 'weighted');
             
             delta_S = adjacency(mst);       % initialize
