@@ -33,4 +33,4 @@ The Python version implements a class interface.
  print(cc.score)
 ```
 
-> The induction is not mentioned in the blog post. This clustering algorithm is not designed for that, but there's a simple way to do it. Like kNN, just assign the new data the cluster of its nearest neighbor in the training dataset.
+> The induction is not mentioned in the blog post. This clustering algorithm is not designed for that, but there's a simple way to do it. Following the idea of MST and single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset.
