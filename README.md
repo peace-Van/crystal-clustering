@@ -32,3 +32,5 @@ The Python version implements a class interface.
  # The value of the Gibbs free energy (objective function)
  print(cc.score)
 ```
+
+> The induction is not mentioned in the blog post. This clustering algorithm is not designed for that, but there's a simple way to do it. Like $k$NN, just assign the new data the cluster of its nearest neighbor in the training dataset.
