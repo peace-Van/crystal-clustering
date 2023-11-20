@@ -146,8 +146,13 @@ if __name__ == '__main__':
     X = loadmat('centroids.mat')['c']
 
     # Initialize with temperature and data
-    cc = CrystalCluster(5.0, X)
+    cc = CrystalCluster(5.0, X, weights=None)
     # Fit the model, specify max iterations (can use np.inf)
     idx = cc.fit_predict(50, verbose=True)
     # (Optional) Assign cluster index for new data
     idx2 = cc.predict(X)
+
+    # The theoretical temperature
+    print(cc.theoT)
+    # The value of the Gibbs free energy (objective function)
+    print(cc.score)
