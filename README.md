@@ -1,5 +1,6 @@
 # Crystal Clustering
-A clustering method inspired by precipitation-solubility equilibrium
+A clustering method inspired by precipitation-solubility equilibrium   
+
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry).    
 For details about the method, see my blog post [A novel clustering method - Crystal clustering](https://peace-van.github.io/climate/2023/11/01/crystalcluster.html).   
 
