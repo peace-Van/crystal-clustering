@@ -59,8 +59,7 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
             converge = true;
 
             mst = my_minspantree(X, W);
-            G = sum(mst.Edges.Weight);
-            theoT = -G / log(sz);
+            theoT = -sum(mst.Edges.Weight) / log(sz);
             delta_H = -adjacency(mst, 'weighted');
             
             delta_S = adjacency(mst);       % initialize
@@ -94,7 +93,7 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
                     % if the bond does not exist, form it
                     mst = addedge(mst, row, col, -delta_H(row, col));
                     if verbose
-                        fprintf('form %d - %d\n', col, row)
+                        fprintf('connect %d - %d\n', col, row)
                     end
                 else
                     mst = rmedge(mst, t);
@@ -135,9 +134,9 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
                 loop_cnt = loop_cnt + 1;
             end
             if converge
-                fprintf('Crystal clustering converged at Epoch %d.\n', loop_cnt)
+                fprintf('Crystal clustering converged at Action %d.\n', loop_cnt)
             else
-                fprintf('Crystal clustering did not converge within %d epochs.\n', loops)
+                fprintf('Crystal clustering did not converge within %d actions.\n', loops)
             end
             
         case 'random'
