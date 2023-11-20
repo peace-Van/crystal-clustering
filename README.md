@@ -25,4 +25,9 @@ The Python version implements a class interface.
  idx = cc.fit_predict(50, verbose=True)
  # (Optional) Assign cluster index for new data
  idx2 = cc.predict(X)
+
+ # The theoretical temperature
+ print(cc.theoT)
+ # The value of the Gibbs free energy (objective function)
+ print(cc.score)
 ```
