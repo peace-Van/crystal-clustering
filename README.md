@@ -3,7 +3,7 @@ A clustering method inspired by precipitation-solubility equilibrium
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry).    
 For details about the method, see my blog post [A novel clustering method - Crystal clustering](https://peace-van.github.io/climate/2023/11/01/crystalcluster.html).   
 
-`iris.mat` is an example dataset (the Iris flower dataset). The weights `iris.W` is not used in the experiment described in the blog post.
+`iris.mat` is an example dataset (the Iris flower dataset). The weights `iris.W` is not used in the experiment described in the blog post.   
 `centroids.mat` is the dataset used in the climate clustering, described in [this post](https://peace-van.github.io/climate/2023/11/17/sec6.html).   
 
 ## Matlab
