@@ -133,10 +133,12 @@ function [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)
 
                 loop_cnt = loop_cnt + 1;
             end
-            if converge
-                fprintf('Crystal clustering converged at Action %d.\n', loop_cnt)
-            else
-                fprintf('Crystal clustering did not converge within %d actions.\n', loops)
+            if verbose
+                if converge
+                    fprintf('Crystal clustering converged at Action %d.\n', loop_cnt)
+                else
+                    fprintf('Crystal clustering did not converge within %d actions.\n', loops)
+                end
             end
             
         case 'random'
