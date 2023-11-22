@@ -7,54 +7,70 @@ Created on Sat Nov 18 20:54:15 2023
 
 
 from scipy.spatial.distance import pdist, cdist, squareform
-from scipy.sparse.csgraph import minimum_spanning_tree, connected_components
-from scipy.sparse import dok_array
+from scipy.sparse.csgraph import minimum_spanning_tree, connected_components, depth_first_order
+from link_cut_tree import SubtreeSumNode
 import numpy as np
-from copy import deepcopy
-
-
-# Calculate the entropy of a graph
-def graph_entropy(graph, W=None):
-    if W is None:
-        W = np.ones(graph.shape[0], dtype=np.float64)
-
-    n, bins = connected_components(graph)
-
-    if n == 1:
-        return 0.0
-    cnt = np.bincount(bins, weights=W.flatten())
-    N = np.sum(W)
-    return -np.sum(cnt * np.log(cnt / N)) / N
 
 
 class CrystalCluster:
     def __init__(self, temperature, X, weights=None):
         self.data = X
-        self.sz = len(X)
+        self.N = len(X)
         if weights is None:
-            self.W = np.ones((self.sz, 1), dtype=np.float64)
+            self.W = np.ones(self.N, dtype=np.float64)
         else:
-            self.W = weights * self.sz / np.sum(weights)
+            self.W = weights * self.N / np.sum(weights)
 
         dists = squareform(pdist(self.data))
-        dists = -(self.W @ self.W.T) / dists
+        w = np.expand_dims(self.W, 1)
+        dists = -(w @ w.T) / dists
 
         # In the starting state all bonds in the MST are connected
         # so the dH are all positive
-        self.dH_ori = (-minimum_spanning_tree(dists)).todok()
-        self.theoT = np.sum(self.dH_ori) / np.log(self.sz)
-        self.mst_edges = list(self.dH_ori.keys())
-        self.edges_view = np.array([list(t) for t in self.mst_edges])
+        self.graph = -minimum_spanning_tree(dists)
+
+        # Choose the node closest to the centroid as tree root
+        C = np.mean(self.data, axis=0, keepdims=True)
+        dists_ = cdist(C, self.data)
+        r = sorted([(b, a) for a, b in enumerate(dists_[0, :])])
+        for _, i in r:
+            if self.graph[i, :].nnz > 1:
+                self.root = i
+                break
+
+        # Construct the link-cut tree
+        _, self.graph_edges = depth_first_order(
+            self.graph, self.root, directed=False)
+        self.dH = np.zeros(self.N, dtype=np.float64)
+        self.nodes = [SubtreeSumNode(i, self.W[i]) for i in range(self.N)]
+        for u, v in enumerate(self.graph_edges):
+            # v is the predecessor of u
+            if v >= 0:
+                if self.graph[u, v]:
+                    self.dH[u] = self.graph[u, v]
+                else:
+                    self.dH[u] = self.graph[v, u]
+                self.nodes[u].lc_link(self.nodes[v])
+            else:
+                self.dH[u] = np.inf
+
+        self.theoT = np.sum(self.graph) / np.log(self.N)
+        self.graph_ori = self.graph.todok().astype(bool, copy=False)
 
         self.reset(temperature)
 
     # Reset the system to starting state, and optionally set a new temperature
     def reset(self, new_temp=None):
-        self.dH = deepcopy(self.dH_ori)
-        self.graph = self.dH.astype(bool)
-        self.dS = dok_array((self.sz, self.sz), dtype=np.float64)
+        disconnections = np.nonzero(self.dH < 0)[0]
+        for u in disconnections:
+            v = self.graph_edges[u]
+            self.nodes[u].lc_link(self.nodes[v])
 
-        for edge in self.mst_edges:
+        self.dH = np.abs(self.dH)
+        self.dS = np.zeros(self.N, dtype=np.float64)
+        self.graph = self.graph_ori.copy()
+
+        for edge in range(self.N):
             self._update_dS(edge)
 
         if new_temp is not None:
@@ -64,49 +80,85 @@ class CrystalCluster:
         self.score = 0.0
 
     # Calculate the dS of an action
+    # O(log N) thanks to link-cut tree
     def _update_dS(self, edge):
-        S0 = graph_entropy(self.graph, self.W)
-        graph_ = deepcopy(self.graph)
-        if edge not in self.mst_edges:
-            edge = (edge[1], edge[0])
-        graph_[edge[0], edge[1]] = not graph_[edge[0], edge[1]]
+        # v is the predecessor of u
+        u = edge
+        if u < 0:
+            return
+        v = self.graph_edges[u]
+        if v < 0:
+            return
 
-        S1 = graph_entropy(graph_, self.W)
-
-        self.dS[edge[0], edge[1]] = S1 - S0
+        if self.dH[edge] > 0:
+            # if u and v is connected
+            N3 = self.nodes[u].lc_get_root().get_sum()
+            N1 = self.nodes[u].get_sum()
+            N2 = N3 - N1
+            self.dS[edge] = -N1/self.N * np.log(N1/self.N) - N2/self.N * np.log(
+                N2/self.N) + N3/self.N * np.log(N3/self.N)
+        else:
+            # if u and v is disconnected
+            N1 = self.nodes[u].get_sum()
+            N2 = self.nodes[v].lc_get_root().get_sum()
+            N3 = N1 + N2
+            self.dS[edge] = -N3/self.N * np.log(N3/self.N) + N1/self.N * np.log(
+                N1/self.N) + N2/self.N * np.log(N2/self.N)
 
     # One action
     def _loop(self, verbose=False):
         # Find the action with the lowest negative dG
-        M = self.dG.min()
-        idx = self.dG.argmin()
-        row, col = np.unravel_index(idx, self.dG.shape)
-        if (row, col) not in self.mst_edges:
-            row, col = col, row
+        edge = self.dG.argmin()
+        u = edge
+        if u < 0:
+            return
+        v = self.graph_edges[u]
+        if v < 0:
+            return
+
+        flag = self.dH[edge] > 0
 
         # Find the edges engaging the nodes in the connected components
-        # of the two nodes (row, col)
+        # of the two nodes (u, v)
         # Once the action is done, the dS of these edges will change
-        bins = self.curr_state()
-        affected_nodes = np.logical_or(bins == bins[row], bins == bins[col])
-        affected_edges = np.nonzero(np.logical_or(
-            affected_nodes[self.edges_view[:, 0]], affected_nodes[self.edges_view[:, 1]]))[0]
-
-        # connect/break the edge
-        self.graph[row, col] = not self.graph[row, col]
-        self.score += M
+        # DFS is faster than a brute-force `connected_components` at later stage of training
+        if flag:
+            # if the edge is to be cut
+            affected_nodes = depth_first_order(
+                self.graph, u, directed=False, return_predecessors=False).tolist()
+        else:
+            # if the edge is to be linked
+            affected_nodes_u = depth_first_order(
+                self.graph, u, directed=False, return_predecessors=False).tolist()
+            affected_nodes_v = depth_first_order(
+                self.graph, v, directed=False, return_predecessors=False).tolist()
+            affected_nodes = affected_nodes_u + affected_nodes_v
+        affected_nodes_ = np.nonzero(
+            np.isin(self.graph_edges, affected_nodes, assume_unique=True))[0].tolist()
+        affected_edges = set(affected_nodes + affected_nodes_)
 
         if verbose:
-            if self.dH[row, col] < 0:
-                print('connect %d - %d' % (row, col))
+            if flag:
+                print('break %d - %d' % (u, v))
             else:
-                print('break %d - %d' % (row, col))
+                print('connect %d - %d' % (u, v))
+
+        # connect/break the edge
+        self.score += self.dG[edge]
+        if flag:
+            self.nodes[u].lc_cut()
+        else:
+            self.nodes[u].lc_link(self.nodes[v])
+        if (u, v) in self.graph:
+            self.graph[u, v] = not self.graph[u, v]
+        else:
+            self.graph[v, u] = not self.graph[v, u]
 
         # Update dH, dS, dG after the action
-        self.dH[row, col] = -self.dH[row, col]
+        self.dH[edge] = -self.dH[edge]
 
         for edge in affected_edges:
-            self._update_dS(self.mst_edges[edge])
+            self._update_dS(edge)
 
         self.dG = self.dH - self.T * self.dS
 
@@ -134,7 +186,7 @@ class CrystalCluster:
 
     def is_fitted(self):
         # no entry in dG is negative
-        return (self.dG < 0).nnz == 0
+        return not np.any(self.dG < 0)
 
     def curr_state(self):
         _, bins = connected_components(self.graph)
