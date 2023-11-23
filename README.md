@@ -28,7 +28,7 @@ The Python version uses a class interface. `CrystalCluster_brute.py` implements 
 
 ### Brute-force algorithm
 
-The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. Each time an entry in the `dS` matrix is updated, we calculate the graph entropy twice, before and after the action, and subtract, which is `O(N)` time complexity. 
+The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. Each time an entry in the `dS` matrix is updated, the graph entropy is calculated twice. Once before and once after the action, and then subtract, which is `O(N)` time complexity. 
 
 ### Link-cut tree algorithm
 
