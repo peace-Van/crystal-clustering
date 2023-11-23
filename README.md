@@ -24,7 +24,7 @@ The Python version uses a class interface. `CrystalCluster_brute.py` implements 
  print(cc.score)
 ```
 
-> The induction (`cc.predict`) is not mentioned in the blog post. The crystal clustering method is not designed for that, but there's a simple way to do it. Following the idea of single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset.
+> The induction `cc.predict` is not mentioned in the blog post. The crystal clustering method is not designed for that, but there's a simple way to do it. Following the idea of single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset.
 
 ### Brute-force algorithm
 
