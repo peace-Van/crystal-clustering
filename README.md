@@ -11,7 +11,7 @@ For details about the method, see my blog post [A novel clustering method - Crys
 `centroids.mat` is the dataset used in the climate clustering, described in [this post](https://peace-van.github.io/climate/2023/11/17/sec6.html).   
 
 ## Python
-The Python version uses a class interface. `CrystalCluster_brute.py` implements the brute-force algorithm, and `CrystalCluster.py` implements the link-cut tree algorithm. The interface is shared.   
+The Python version uses a class interface. `CrystalCluster_brute.py` implements the brute-force algorithm, and `CrystalCluster.py` implements the link-cut tree algorithm. The interface is the same.   
 
 ```
  # Initialize with temperature, data and (optional) weights
