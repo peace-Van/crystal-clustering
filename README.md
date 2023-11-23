@@ -1,4 +1,7 @@
 # Crystal Clustering
+
+![p](https://github.com/peace-Van/peace-Van.github.io/blob/main/assets/NN6/theo2.6.png)   
+
 A clustering method inspired by precipitation-solubility equilibrium   
 
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry).    
