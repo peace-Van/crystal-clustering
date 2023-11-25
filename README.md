@@ -4,7 +4,7 @@
 
 A clustering method inspired by precipitation-solubility equilibrium   
 
-Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry) and is adept at keeping the intrinsic structure of the data.   
+Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of thermodynamics) and is adept at keeping the intrinsic structure of the data.   
 It achieves an average normalised clustering accuracy of 0.874 (standard deviation 0.219, details in `scores_T.xlsx`) over the 73 small datasets [described by Marek Gagolewski](https://genieclust.gagolewski.com/weave/benchmarks_details.html), outperforming all the listed methods on this single metric.   
 For details about the method, see my blog post [A novel clustering method - Crystal clustering](https://peace-van.github.io/climate/2023/11/01/crystalcluster.html).   
 
