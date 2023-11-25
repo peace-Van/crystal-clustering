@@ -41,7 +41,7 @@ The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. To update a
 
 ### Link-cut tree algorithm
 
-The graph is stored using `SubtreeSumNode`. To update an entry in the `dS` matrix, we retrieve the sizes of the two connected components on both sides of the edge and calculate the entropy change directly. With link-cut tree data structure, this is done in `O(log N)` time.   
+The graph is stored using `SubtreeSumNode`. To update an entry in the `dS` matrix, we retrieve the sizes of the two connected components on both sides of the edge and calculate the entropy change directly. With the link-cut tree data structure, this is done in `O(log N)` time.   
 
 > `link_cut_tree.py` is from [Asger Hautop Drewsen](https://github.com/tyilo/link_cut_tree/).
 
