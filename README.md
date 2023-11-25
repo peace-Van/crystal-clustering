@@ -46,7 +46,7 @@ The graph is stored using `SubtreeSumNode`. To update an entry in the `dS` matri
 > `link_cut_tree.py` is from [Asger Hautop Drewsen](https://github.com/tyilo/link_cut_tree/).
 
 ## Matlab
-The Matlab version uses a function interface and implements the brute-force algorithm.
+The Matlab version uses a function interface and implements the brute-force algorithm only.
 > [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)   
    
 Cluster on dataset `X` with weights `W` at 'temperature' `T`, using the algorithm specified by `mode`, running a maximum number of `loops`.   
