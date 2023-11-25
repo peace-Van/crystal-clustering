@@ -27,7 +27,7 @@ def graph_entropy(graph, W=None):
 
 
 class CrystalCluster:
-    def __init__(self, temperature, X, weights=None):
+    def __init__(self, temperature, k, X, weights=None):
         self.data = X
         self.N = len(X)
         if weights is None:
@@ -46,10 +46,10 @@ class CrystalCluster:
         self.mst_edges = list(self.dH.keys())
         self.edges_view = np.array([list(t) for t in self.mst_edges])
 
-        self.reset(temperature)
+        self.reset(temperature, k)
 
     # Reset the system to starting state, and optionally set a new temperature
-    def reset(self, new_temp=None):
+    def reset(self, new_temp=None, new_k=None):
         self.dH = np.abs(self.dH).todok()
         self.graph = self.dH.astype(bool)
         self.dS = dok_array((self.N, self.N), dtype=np.float64)
@@ -59,9 +59,19 @@ class CrystalCluster:
 
         if new_temp is not None:
             self.T = new_temp
+            self.mode = 't'
+        elif new_k is not None:
+            self.K = new_k
+            self.mode = 'k'
 
-        self.dG = self.dH - self.T * self.dS
-        self.score = 0.0
+        if self.mode == 't':
+            self.dG = self.dH - self.T * self.dS
+            self.score = 0.0
+        elif self.mode == 'k':
+            self.Tm = self.dH / self.dS
+            self.Tm[np.isnan(self.Tm)] = 0
+            self.Tm = dok_array(self.Tm)
+            self.n_comps = 1
 
     # Calculate the dS of an action
     # brute force O(N)
@@ -79,8 +89,15 @@ class CrystalCluster:
     # One action
     def _loop(self, verbose=False):
         # Find the action with the lowest negative dG
-        idx = self.dG.argmin()
-        row, col = np.unravel_index(idx, self.dG.shape)
+        if self.mode == 't':
+            idx = self.dG.argmin()
+            row, col = np.unravel_index(idx, self.dG.shape)
+        elif self.mode == 'k':
+            t = self.Tm / (self.dH > 0)
+            t[np.isnan(t)] = np.inf
+            idx = t.argmin()
+            row, col = np.unravel_index(idx, self.Tm.shape)
+
         if (row, col) not in self.mst_edges:
             row, col = col, row
 
@@ -94,7 +111,10 @@ class CrystalCluster:
 
         # connect/break the edge
         self.graph[row, col] = not self.graph[row, col]
-        self.score += self.dG[row, col]
+        if self.mode == 't':
+            self.score += self.dG[row, col]
+        elif self.mode == 'k':
+            self.n_comps += 1
 
         if verbose:
             if self.dH[row, col] < 0:
@@ -108,7 +128,12 @@ class CrystalCluster:
         for edge in affected_edges:
             self._update_dS(self.mst_edges[edge])
 
-        self.dG = self.dH - self.T * self.dS
+        if self.mode == 't':
+            self.dG = self.dH - self.T * self.dS
+        elif self.mode == 'k':
+            self.Tm = self.dH / self.dS
+            self.Tm[np.isnan(self.Tm)] = 0
+            self.Tm = dok_array(self.Tm)
 
     def fit_predict(self, max_loops, verbose=False):
         loop_cnt = 0
@@ -133,8 +158,11 @@ class CrystalCluster:
         return bins[res]
 
     def is_fitted(self):
-        # no entry in dG is negative
-        return (self.dG < 0).nnz == 0
+        if self.mode == 't':
+            # no entry in dG is negative
+            return (self.dG < 0).nnz == 0
+        elif self.mode == 'k':
+            return self.n_comps == self.K
 
     def curr_state(self):
         _, bins = connected_components(self.graph)
@@ -143,16 +171,18 @@ class CrystalCluster:
 
 if __name__ == '__main__':
     from scipy.io import loadmat
-    X = loadmat('centroids.mat')['c']
+    centroids = loadmat('centroids.mat')['centroids']
+    X = centroids['X'][0][0]
+    W = centroids['W'][0][0].flatten()
 
-    # Initialize with temperature and data
-    cc = CrystalCluster(5.0, X, weights=None)
+    # Initialize with k and data
+    cc = CrystalCluster(None, 26, X, weights=None)
     # Fit the model, specify max iterations (can use np.inf)
     idx = cc.fit_predict(50, verbose=True)
     # (Optional) Assign cluster index for new data
-    idx2 = cc.predict(X)
+    # idx2 = cc.predict(X)
 
     # The theoretical temperature
     print(cc.theoT)
-    # The value of the Gibbs free energy (objective function)
-    print(cc.score)
+    # The value of the Gibbs free energy (objective function, not available for k mode)
+    # print(cc.score)

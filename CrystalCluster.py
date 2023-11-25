@@ -13,7 +13,7 @@ import numpy as np
 
 
 class CrystalCluster:
-    def __init__(self, temperature, X, weights=None):
+    def __init__(self, temperature, k, X, weights=None):
         self.data = X
         self.N = len(X)
         if weights is None:
@@ -57,10 +57,10 @@ class CrystalCluster:
         self.theoT = np.sum(self.graph) / np.log(self.N)
         self.graph_ori = self.graph.todok().astype(bool, copy=False)
 
-        self.reset(temperature)
+        self.reset(temperature, k)
 
     # Reset the system to starting state, and optionally set a new temperature
-    def reset(self, new_temp=None):
+    def reset(self, new_temp=None, new_k=None):
         disconnections = np.nonzero(self.dH < 0)[0]
         for u in disconnections:
             v = self.graph_edges[u]
@@ -75,9 +75,17 @@ class CrystalCluster:
 
         if new_temp is not None:
             self.T = new_temp
+            self.mode = 't'
+        elif new_k is not None:
+            self.K = new_k
+            self.mode = 'k'
 
-        self.dG = self.dH - self.T * self.dS
-        self.score = 0.0
+        if self.mode == 't':
+            self.dG = self.dH - self.T * self.dS
+            self.score = 0.0
+        elif self.mode == 'k':
+            self.Tm = self.dH / self.dS
+            self.n_comps = 1
 
     # Calculate the dS of an action
     # O(log N) thanks to link-cut tree
@@ -107,8 +115,11 @@ class CrystalCluster:
 
     # One action
     def _loop(self, verbose=False):
-        # Find the action with the lowest negative dG
-        edge = self.dG.argmin()
+        # Find the action with the lowest negative dG or Tm
+        if self.mode == 't':
+            edge = self.dG.argmin()
+        elif self.mode == 'k':
+            edge = (self.Tm / (self.dH > 0)).argmin()
         u = edge
         if u < 0:
             return
@@ -144,7 +155,11 @@ class CrystalCluster:
                 print('connect %d - %d' % (u, v))
 
         # connect/break the edge
-        self.score += self.dG[edge]
+        if self.mode == 't':
+            self.score += self.dG[edge]
+        elif self.mode == 'k':
+            self.n_comps += 1
+
         if flag:
             self.nodes[u].lc_cut()
         else:
@@ -154,13 +169,16 @@ class CrystalCluster:
         else:
             self.graph[v, u] = not self.graph[v, u]
 
-        # Update dH, dS, dG after the action
+        # Update dH, dS, dG, Tm after the action
         self.dH[edge] = -self.dH[edge]
 
         for edge in affected_edges:
             self._update_dS(edge)
 
-        self.dG = self.dH - self.T * self.dS
+        if self.mode == 't':
+            self.dG = self.dH - self.T * self.dS
+        elif self.mode == 'k':
+            self.Tm = self.dH / self.dS
 
     def fit_predict(self, max_loops, verbose=False):
         loop_cnt = 0
@@ -185,8 +203,11 @@ class CrystalCluster:
         return bins[res]
 
     def is_fitted(self):
-        # no entry in dG is negative
-        return not np.any(self.dG < 0)
+        if self.mode == 't':
+            # no entry in dG is negative
+            return not np.any(self.dG < 0)
+        elif self.mode == 'k':
+            return self.n_comps == self.K
 
     def curr_state(self):
         _, bins = connected_components(self.graph)
@@ -195,16 +216,18 @@ class CrystalCluster:
 
 if __name__ == '__main__':
     from scipy.io import loadmat
-    X = loadmat('centroids.mat')['c']
+    centroids = loadmat('centroids.mat')['centroids']
+    X = centroids['X'][0][0]
+    W = centroids['W'][0][0].flatten()
 
     # Initialize with temperature and data
-    cc = CrystalCluster(5.0, X, weights=None)
+    cc = CrystalCluster(5.0, None, X, weights=None)
     # Fit the model, specify max iterations (can use np.inf)
     idx = cc.fit_predict(50, verbose=True)
     # (Optional) Assign cluster index for new data
-    idx2 = cc.predict(X)
+    # idx2 = cc.predict(X)
 
     # The theoretical temperature
     print(cc.theoT)
-    # The value of the Gibbs free energy (objective function)
+    # The value of the Gibbs free energy (objective function, not available for k mode)
     print(cc.score)
