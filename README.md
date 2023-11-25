@@ -37,7 +37,7 @@ print(cc.score)
 
 ### Brute-force algorithm
 
-The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. To update an entry in the `dS` matrix, the graph entropy is calculated twice. Once before and once after the action, and then subtract, which is `O(N)` time complexity. This algorithm intends to provide an easy understanding of the mechanism.   
+The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. To update an entry in the `dS` matrix, the graph entropy is calculated twice. Once before and once after the action, and then subtract, which is `O(N)` time complexity. The code intends to provide an easy understanding of the mechanism.   
 
 ### Link-cut tree algorithm
 
@@ -46,7 +46,7 @@ The graph is stored using `SubtreeSumNode`. To update an entry in the `dS` matri
 > `link_cut_tree.py` is from [Asger Hautop Drewsen](https://github.com/tyilo/link_cut_tree/).
 
 ## Matlab
-The Matlab version uses a function interface and implements the brute-force algorithm only.
+The Matlab version uses a function interface and implements the brute-force `greedy-backtrack` algorithm. The `surrogate`, `greedy` and `random` algorithms are for research purposes.   
 > [idx, mst, G, theoT] = crystalcluster(X, W, T, mode, loops, verbose)   
    
 Cluster on dataset `X` with weights `W` at 'temperature' `T`, using the algorithm specified by `mode`, running a maximum number of `loops`.   
