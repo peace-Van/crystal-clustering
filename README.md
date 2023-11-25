@@ -37,7 +37,7 @@ print(cc.score)
 
 ### Brute-force algorithm
 
-The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. To update an entry in the `dS` matrix, the graph entropy is calculated twice. Once before and once after the action, and then subtract, which is `O(N)` time complexity. 
+The graph is stored as `SciPy`'s `Dictionary of Keys` sparse matrix. To update an entry in the `dS` matrix, the graph entropy is calculated twice. Once before and once after the action, and then subtract, which is `O(N)` time complexity. This algorithm intends to provide an easy understanding of the mechanism.   
 
 ### Link-cut tree algorithm
 
