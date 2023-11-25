@@ -5,7 +5,7 @@
 A clustering method inspired by precipitation-solubility equilibrium   
 
 Basically, it's a divisive strategy over Minimum Spanning Tree optimizing a specific criterion (Gibbs free energy in terms of physical chemistry) and is adept at keeping the intrinsic structure of the data.   
-It achieves an average normalised clustering accuracy of 0.874 (standard deviation 0.219) over the 73 small datasets [described by Marek Gagolewski](https://genieclust.gagolewski.com/weave/benchmarks_details.html), outperforming all the listed methods on this single metric.   
+It achieves an average normalised clustering accuracy of 0.874 (standard deviation 0.219, details in `scores_T.xlsx`) over the 73 small datasets [described by Marek Gagolewski](https://genieclust.gagolewski.com/weave/benchmarks_details.html), outperforming all the listed methods on this single metric.   
 For details about the method, see my blog post [A novel clustering method - Crystal clustering](https://peace-van.github.io/climate/2023/11/01/crystalcluster.html).   
 
 `iris.mat` is an example dataset (the Iris flower dataset). The weights `iris.W` is not used in the experiment described in the blog post.   
@@ -31,7 +31,7 @@ print(cc.theoT)
 print(cc.score)
 ```
 
-> Not described in the blog post, an algorithm that accepts number of clusters `k` as input instead of the relaxation strength parameter `T` is also implemented. In brief, it breaks the MST bond with the lowest $\Delta H / \Delta S$ for each action until the desired number of clusters is reached. In this algorithm the `backtrack` mechanism cannot be implemented (otherwise there could be multiple clustering results for one specified $k$). Also, lowest $\Delta H / \Delta S$ is not equivalent to lowest negative $(\Delta H - T \Delta S)$ for a given positive $T$; hence the bond breaking order can be different from the algorithm using `T`, leading to different clustering results. Fundamentally it overthrows the essence of thermodynamics equilibrium. The test results also show a slight downgrade (average NCA 0.870, std 0.227). I don't prefer this algorithm.   
+> Not described in the blog post, an algorithm that accepts number of clusters `k` as input instead of the relaxation strength parameter `T` is also implemented. In brief, it breaks the MST bond with the lowest $\Delta H / \Delta S$ for each action until the desired number of clusters is reached. In this algorithm the `backtrack` mechanism cannot be implemented (otherwise there could be multiple clustering results for one specified $k$). Also, lowest $\Delta H / \Delta S$ is not equivalent to lowest negative $(\Delta H - T \Delta S)$ for a given positive $T$; hence the bond breaking order can be different from the algorithm using `T`, leading to different clustering results. Fundamentally it overthrows the essence of thermodynamics equilibrium. The test results also show a slight downgrade (average NCA 0.870, std 0.227, details in `scores_k.xlsx`). I don't prefer this algorithm.   
 
 > The induction `cc.predict` is not mentioned in the blog post. The crystal clustering method is not designed for that, but there's a simple way to do it. Following the idea of single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset.   
 
