@@ -57,6 +57,7 @@ class CrystalCluster:
         for edge in self.mst_edges:
             self._update_dS(edge)
 
+        self.mode = None
         if new_temp is not None:
             self.T = new_temp
             self.mode = 't'
@@ -135,7 +136,7 @@ class CrystalCluster:
             self.Tm[np.isnan(self.Tm)] = 0
             self.Tm = dok_array(self.Tm)
 
-    def fit_predict(self, max_loops, verbose=False):
+    def fit_predict(self, max_loops=np.inf, verbose=False):
         loop_cnt = 0
         while not self.is_fitted():
             self._loop(verbose)

@@ -73,6 +73,7 @@ class CrystalCluster:
         for edge in range(self.N):
             self._update_dS(edge)
 
+        self.mode = None
         if new_temp is not None:
             self.T = new_temp
             self.mode = 't'
@@ -180,7 +181,7 @@ class CrystalCluster:
         elif self.mode == 'k':
             self.Tm = self.dH / self.dS
 
-    def fit_predict(self, max_loops, verbose=False):
+    def fit_predict(self, max_loops=np.inf, verbose=False):
         loop_cnt = 0
         while not self.is_fitted():
             self._loop(verbose)
