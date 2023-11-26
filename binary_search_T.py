@@ -39,7 +39,7 @@ if __name__ == '__main__':
     k = 3
 
     # Initialize with data
-    cc = CrystalCluster(None, None, X, weights=None)
+    cc = CrystalCluster(X, weights=None, temperature=None, k=None)
     # The theoretical temperature
     print(cc.theoT)
     T, idx = binary_search_T(cc, k, verbose=True)
