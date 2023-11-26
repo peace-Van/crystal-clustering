@@ -27,15 +27,21 @@ def graph_entropy(graph, W=None):
 
 
 class CrystalCluster:
-    def __init__(self, temperature, k, X, weights=None):
-        self.data = X
-        self.N = len(X)
+    def __init__(self, X, weights=None, temperature=None, k=None,
+                 metric='euclidean', dist_lim=[0, np.inf], **kwargs):
+        self.data = np.array(X)
+        self.N = len(self.data)
         if weights is None:
             self.W = np.ones(self.N, dtype=np.float64)
         else:
             self.W = weights * self.N / np.sum(weights)
 
-        dists = squareform(pdist(self.data))
+        # `dist_lim` is used to enforce certain bonds
+        # Pairs with distance below or equal to `dist_lim[0]` will always be in one cluster
+        # Pairs with distance above or equal to `dist_lim[1]` will never be in one cluster
+        dists = squareform(pdist(self.data, metric=metric, **kwargs))
+        dists[dists <= dist_lim[0]] = 0.0
+        dists[dists >= dist_lim[1]] = np.inf
         w = np.expand_dims(self.W, 1)
         dists = -(w @ w.T) / dists
 
@@ -152,11 +158,31 @@ class CrystalCluster:
 
         return self.curr_state()
 
-    def predict(self, X):
+    def centroids(self):
         bins = self.curr_state()
-        dists = cdist(X, self.data)
-        res = dists.argmin(axis=1)
-        return bins[res]
+        w = np.expand_dims(self.W, 1)
+        res = []
+        for i in range(np.max(bins) + 1):
+            W = w * (np.expand_dims(bins == i, 1))
+            res.append(self.data.T @ W / W.sum())
+        return np.concatenate(res, axis=1).T
+
+    def predict(self, X, mode='linkage'):
+        if mode == 'linkage':
+            bins = self.curr_state()
+            dists = cdist(X, self.data)
+            res = dists.argmin(axis=1)
+            return bins[res]
+        elif mode == 'centroid':
+            centroids = self.centroids()
+            dists = cdist(X, centroids)
+            return dists.argmin(axis=1)
+
+    # To save memory
+    # Use of this function disables `predict` and `centroids` functionality
+    # You may save the centroids beforehand
+    def clear_data(self):
+        del self.data
 
     def is_fitted(self):
         if self.mode == 't':
@@ -176,14 +202,14 @@ if __name__ == '__main__':
     X = centroids['X'][0][0]
     W = centroids['W'][0][0].flatten()
 
-    # Initialize with k and data
-    cc = CrystalCluster(None, 26, X, weights=None)
-    # Fit the model, specify max iterations (can use np.inf)
-    idx = cc.fit_predict(50, verbose=True)
+    # Initialize with `k` and data
+    cc = CrystalCluster(X, weights=None, temperature=None, k=26)
+    # Fit the model, max_loops not needed for `k` mode
+    idx = cc.fit_predict(verbose=True)
     # (Optional) Assign cluster index for new data
-    # idx2 = cc.predict(X)
+    # idx2 = cc.predict(X, mode='centroid')
 
     # The theoretical temperature
     print(cc.theoT)
-    # The value of the Gibbs free energy (objective function, not available for k mode)
+    # The value of the Gibbs free energy (objective function, not available for `k` mode)
     # print(cc.score)
