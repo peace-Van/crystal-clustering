@@ -23,7 +23,7 @@ cc = CrystalCluster(X, weights=None, temperature=5.0, k=None)
 # Fit the model, specify max iterations (defaults `np.inf` ok in most cases)
 idx = cc.fit_predict(verbose=True)
 # (Optional) Assign cluster index for new data
-# idx2 = cc.predict(X)
+# idx2 = cc.predict(X, mode='linkage')
 
 # The theoretical temperature
 print(cc.theoT)
@@ -31,9 +31,11 @@ print(cc.theoT)
 print(cc.score)
 ```
 
-> Not described in the blog post, an algorithm that accepts number of clusters `k` as input instead of the relaxation strength parameter `T` is also implemented. In brief, it breaks the MST bond with the lowest $\Delta H / \Delta S$ for each action until the desired number of clusters is reached. In this algorithm the `backtrack` mechanism cannot be implemented (otherwise there could be multiple clustering results for one specified $k$). Also, lowest $\Delta H / \Delta S$ is not equivalent to lowest negative $(\Delta H - T \Delta S)$ for a given positive $T$; hence the bond breaking order can be different from the algorithm using `T`, leading to different clustering results. This algorithm guarantees convergence and is `O(kNlog N)` in time with link-cut tree, but fundamentally it overthrows the essence of thermodynamics equilibrium. The test results also show a slight downgrade (average NCA 0.870, std 0.227, details in `scores_k.xlsx`).   
+> All distance measures supported by [`SciPy pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html) are supported. Specify using the `metric` argument and keyword arguments in the initialization of the class.   
 
-> The induction `cc.predict` is not mentioned in the blog post. The crystal clustering method is not designed for that, but there's a simple way to do it. Following the idea of single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset.   
+> Not described in the blog post, an algorithm that accepts number of clusters `k` as input instead of the relaxation strength parameter `T` is also implemented. In brief, it breaks the MST bond with the lowest $\Delta H / \Delta S$ for each action until the desired number of clusters is reached. In this algorithm the `backtrack` mechanism cannot be implemented (otherwise there could be multiple clustering results for one specified $k$). Also, lowest $\Delta H / \Delta S$ is not equivalent to lowest negative $(\Delta H - T \Delta S)$ for a given positive $T$; hence the bond breaking order can be different from the algorithm using `T`, leading to different clustering results. This algorithm guarantees convergence and is `O(kN log N)` in time with link-cut tree, but fundamentally it overthrows the essence of thermodynamics equilibrium. The test results also show a slight downgrade (average NCA 0.870, std 0.227, details in `scores_k.xlsx`).   
+
+> The induction `cc.predict` is not mentioned in the blog post. The crystal clustering method is not designed for that, but there are simple ways to do it. Following the idea of single linkage, just assign the new data the cluster of its nearest neighbor in the training dataset, which is the `linkage` mode (`1 nearest neighbor` classification on the whole training set). Alternatively, for each cluster, compute the cluster centroid as the weighted average of its data, and assign the new data the cluster of its nearest neighbor among the cluster centroids, which is the `centroid` mode (`1 nearest neighbor` classification on the cluster centroids).   
 
 ### Brute-force algorithm
 
