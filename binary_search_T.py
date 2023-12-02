@@ -5,8 +5,6 @@ Created on Sun Nov 26 00:02:05 2023
 @author: Tracy
 """
 
-import numpy as np
-
 
 # Crystal clustering based on binary search of `T` for a desired number of clusters `target_k`
 # Search range (0, 2 * model.theoT)
@@ -16,7 +14,7 @@ def binary_search_T(model, target_k, verbose=False):
     while True:
         curr = (low + high) / 2
         model.reset(new_temp=curr)
-        idx = model.fit_predict(np.inf, verbose=False) + 1
+        idx = model.fit_predict(verbose=False) + 1
         n_comps = idx.max()
         if verbose:
             print('Temperature: %.1f, N_clusters: %d' % (curr, n_comps))

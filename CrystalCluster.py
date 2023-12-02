@@ -20,6 +20,7 @@ class CrystalCluster:
         if weights is None:
             self.W = np.ones(self.N, dtype=np.float64)
         else:
+            # weights are standardized such that sum(W) = N
             self.W = weights * self.N / np.sum(weights)
 
         # `dist_lim` is used to enforce certain bonds
@@ -29,6 +30,8 @@ class CrystalCluster:
         dists[dists <= dist_lim[0]] = 0.0
         dists[dists >= dist_lim[1]] = np.inf
         w = np.expand_dims(self.W, 1)
+        # The constructed MST is the same as if `dists` is directly used
+        # since -1/d is a monotonically increasing function for d>0
         dists = -(w @ w.T) / dists
 
         # In the starting state all bonds in the MST are connected
