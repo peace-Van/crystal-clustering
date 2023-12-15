@@ -14,8 +14,8 @@ def binary_search_T(model, target_k, verbose=False):
     while True:
         curr = (low + high) / 2
         model.reset(new_temp=curr)
-        idx = model.fit_predict(verbose=False) + 1
-        n_comps = idx.max()
+        idx = model.fit_predict(verbose=False)
+        n_comps = idx.max() + 1
         if verbose:
             print('Temperature: %.1f, N_clusters: %d' % (curr, n_comps))
         if n_comps == target_k:
