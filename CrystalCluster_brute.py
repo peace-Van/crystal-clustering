@@ -28,7 +28,7 @@ def graph_entropy(graph, W=None):
 
 class CrystalCluster:
     def __init__(self, X, weights=None, temperature=None, k=None,
-                 metric='euclidean', dist_lim=[0, np.inf], **kwargs):
+                 metric='euclidean', standardize=False, dist_lim=[0, np.inf], **kwargs):
         self.data = np.array(X)
         self.N = len(self.data)
         if weights is None:
@@ -51,6 +51,11 @@ class CrystalCluster:
         # In the starting state all bonds in the MST are connected
         # so the dH are all positive
         self.dH = (-minimum_spanning_tree(dists)).todok()
+
+        # If standardized, theoT will be 1
+        if standardize:
+            self.dH = self.dH / np.sum(self.dH) * np.log(self.N)
+
         self.theoT = np.sum(self.dH) / np.log(self.N)
         self.mst_edges = list(self.dH.keys())
         self.edges_view = np.array([list(t) for t in self.mst_edges])
@@ -206,7 +211,8 @@ if __name__ == '__main__':
     W = centroids['W'][0][0].flatten()
 
     # Initialize with `k` and data
-    cc = CrystalCluster(X, weights=None, temperature=None, k=26)
+    cc = CrystalCluster(X, weights=None, temperature=None,
+                        k=26, standardize=True)
     # Fit the model, max_loops not needed for `k` mode
     idx = cc.fit_predict(verbose=True)
     # (Optional) Assign cluster index for new data

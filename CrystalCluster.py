@@ -14,7 +14,7 @@ import numpy as np
 
 class CrystalCluster:
     def __init__(self, X, weights=None, temperature=None, k=None,
-                 metric='euclidean', dist_lim=[0, np.inf], **kwargs):
+                 metric='euclidean', standardize=False, dist_lim=[0, np.inf], **kwargs):
         self.data = np.array(X)
         self.N = len(self.data)
         if weights is None:
@@ -63,7 +63,12 @@ class CrystalCluster:
             else:
                 self.dH[u] = np.inf
 
-        self.theoT = np.sum(self.graph) / np.log(self.N)
+        # If standardized, theoT will be 1
+        if standardize:
+            self.dH = self.dH / \
+                np.ma.masked_invalid(self.dH).sum() * np.log(self.N)
+
+        self.theoT = np.ma.masked_invalid(self.dH).sum() / np.log(self.N)
         self.graph_ori = self.graph.todok().astype(bool, copy=False)
 
         self.reset(temperature, k)
@@ -251,7 +256,8 @@ if __name__ == '__main__':
     W = centroids['W'][0][0].flatten()
 
     # Initialize with temperature and data
-    cc = CrystalCluster(X, weights=None, temperature=5.0, k=None)
+    cc = CrystalCluster(X, weights=None, standardize=True,
+                        temperature=2, k=None)
     # Fit the model, specify max iterations (defaults `np.inf` ok in most cases)
     idx = cc.fit_predict(verbose=True)
     # (Optional) Assign cluster index for new data
