@@ -28,7 +28,7 @@ def graph_entropy(graph, W=None):
 
 class CrystalCluster:
     def __init__(self, X, weights=None, temperature=None, k=None,
-                 metric='euclidean', standardize=False, dist_lim=[0, np.inf], **kwargs):
+                 metric='euclidean', standardize=True, dist_lim=[0, np.inf], **kwargs):
         self.data = np.array(X)
         self.N = len(self.data)
         if weights is None:
